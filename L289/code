@@ -27,7 +27,8 @@ void loop() {
     fren = digitalRead(chaveFR);
     if(chaveFR == LOW)
     {
-          analogWrite(enB, 0);
+        digitalWrite(IN3, HIGH); 
+        digitalWrite(IN4, HIGH);
     }
     else if (fren == HIGH)
     {
