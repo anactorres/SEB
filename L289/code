@@ -1,0 +1,62 @@
+#define pot A0
+#define enB 7
+#define IN4 9
+#define IN3 8
+#define chaveLD 13  // Chave Liga - Desliga 
+#define chaveFR 12 //Chave FECHADA: Aciona freio magnético (Fast Motor Stop)
+
+
+float pot_digital;
+float tensao = 0;
+bool state; 
+bool fren; 
+
+
+void setup() {
+  pinMode(ENB, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+  pinMode(CchaveLD, INPUT_PULLUP);
+  pinMode(chaveFR, INPUT_PULLUP);
+}
+
+void loop() {
+  state = digitalRead(chaveLD);
+  if(state == LOW)
+  {
+    fren = digitalRead(chaveFR);
+    if(chaveFR == LOW)
+    {
+          analogWrite(enB, 0);
+    }
+    else if (fren == HIGH)
+    {
+      pot_digital = analogRead(pot);
+      
+      if(pot_digital < 1023/2)
+      {
+        tensao = map(pot_digital, 0, 1023/2, 255, 0);
+        
+        // definindo o sentido anti-horario do motor
+        analogWrite(enB, tensao); 
+        digitalWrite(IN3, HIGH); 
+        digitalWrite(IN4, LOW);
+      }
+      else if(pot_digital > 1023/2)
+      {
+        tensao = map(pot_digital, 1023/2, 1023, 0, 255);
+        
+        // definindo o sentido horario do motor 
+        analogWrite(enB, tensao_motor); 
+        digitalWrite(IN3, LOW); 
+        digitalWrite(IN4, HIGH);
+      }
+      else if(pot_digital == 1023/2)
+      {
+        tensao = 0;
+        analogWrite(enB, tensao); 
+        digitalWrite(IN3, LOW); 
+        digitalWrite(IN4, LOW);
+      } 
+    }
+  }
