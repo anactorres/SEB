@@ -1,0 +1,50 @@
+#define pinChaveLD 2
+#define pinPotenciometro A0
+#define pinLampada 6
+#define pinLDR A1
+
+int valor;
+int valorReferencia;
+int brilho;
+String string1, string2, frase1, frase2;
+void desliga ()
+{
+  analogWrite(pinLampada, 0);
+}
+
+void setup() {
+  // put your setup code here, to run once:
+ Serial.begin(9600);
+ attachInterrupt(digitalPinToInterrupt(pinChaveLD),desliga, HIGH); 
+
+ string1 = "Valor do LDR: ";
+ string2 = "Valor de referencia: ";
+ 
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  valor = analogRead(pinLDR); //diretamente proporcional a luminosidade
+  frase1 = string1 + valor; //concatenar a string e o valor lido
+  Serial.println(frase1);//apresentar o valor lido no monitor serial
+  valorReferencia = analogRead(pinPotenciometro); //valor de referência
+  frase2 = string2 + valorReferencia; //concatenar a string e o valor de referência
+  Serial.println(frase2);//apresentar o valor de referência no monitor serial
+  //delay(500);
+  if(valor <= valorReferencia)
+  {
+    analogWrite(pinLampada, 255); //brilho máximo
+  }
+  else
+  {
+    //luminosidade LDR cai -> tensão cai -> valor cai
+    //se a luminosidade cai -> brilho deve aumentar
+    //valores de referência:
+    //superfície encobrindo o LDR = 25
+    //lâmpada sobre o LDR = 1000
+    brilho = map(valor, 25, 1000, 255, 0);
+    analogWrite(pinLampada, brilho);
+  }
+}
+
