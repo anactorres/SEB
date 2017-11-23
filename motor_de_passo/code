@@ -1,0 +1,230 @@
+//Declaração dos pinos de entrada do L298
+#define IN1 6 
+#define IN2 7
+#define IN3 8
+#define IN4 9
+
+//Declaração dos pinos de enable do L298
+#define ENA 10
+#define ENB 11
+
+//Declaração das chaves que serão utilizadas
+#define chaveLD 2
+#define chaveH_AH 3
+#define chaveVEL_POS 4
+#define chaveVEL_NEG 5
+
+//Declaração das variáveis que guardam os tempos
+unsigned long tempo = 1000; //tempo inicial de 1s
+unsigned long tempoatual;
+unsigned long tempopassado = 0;
+
+//Declaração das variáveis controle
+int i = 1;
+int j = 1;
+
+//Função para girar o motor no sentido horário
+//Recebe o tempo que será usado para controle da velocidade
+void horario(long intervaloTempo)
+{
+  Serial.println(intervaloTempo);
+  tempoatual = millis(); //tempo atual desde o ínicio da execução do programa
+  //Se o tempoatual menos o tempo desde a última execução da tarefa for
+  //maior ou igual ao tempo em que se deve executar os comandos
+  //de acordo com o valor do i, realiza-se um passo no motor
+  if(tempoatual - tempopassado >= intervaloTempo)
+  {
+    switch (i)
+    {
+      case 1: //realizar o passo 1
+      {
+      //Passo 1 - A1 = 1, A2 = 1, B1 = 0, B2 = 0
+      digitalWrite(IN1, HIGH);
+      digitalWrite(IN2, LOW);
+      digitalWrite(IN3, HIGH);
+      digitalWrite(IN4, LOW);
+      break;
+      }
+
+      case 2: //realizar o passo 2
+      {
+      //Passo 2 - A1 = 0, A2 = 1, B1 = 1, B2 = 0
+      digitalWrite(IN1, LOW);
+      digitalWrite(IN2, HIGH);
+      digitalWrite(IN3, HIGH);
+      digitalWrite(IN4, LOW);
+      break;
+      }
+
+    case 3: //realizar o passo 3
+    {
+      //Passo 3 - A1 = 0, A2 = 0, B1 = 1, B2 = 1
+      digitalWrite(IN1, LOW);
+      digitalWrite(IN2, HIGH);
+      digitalWrite(IN3, LOW);
+      digitalWrite(IN4, HIGH);
+      break;
+    }
+
+    case 4: //realizar o passo 4
+    {
+      //Passo 4 - A1 = 1, A2 = 0, B1 = 0, B2 = 1
+      digitalWrite(IN1, HIGH);
+      digitalWrite(IN2, LOW);
+      digitalWrite(IN3, LOW);
+      digitalWrite(IN4, HIGH);
+      break;
+    }
+   }
+    tempopassado = tempoatual; //tempo passado recebe o tempo atual
+     i = i+1; //incrementa a variável controle i
+     if(i == 5) //se i for igual a 5, voltar i para 1
+     {
+      i = 1;
+     }
+  }
+}
+
+//De maneira análoga, essa função gira o motor no sentido antihorário
+void antihorario(long intervaloTempo)
+{
+  Serial.println(intervaloTempo);
+  tempoatual = millis();
+  if(tempoatual - tempopassado >= intervaloTempo)
+  {
+    switch (j)
+    {
+      case 1: //realizar o passo 1
+      {
+      //Passo 1 - A1 = 1, A2 = 0, B1 = 0, B2 = 1
+      digitalWrite(IN1, HIGH);
+      digitalWrite(IN2, LOW);
+      digitalWrite(IN3, LOW);
+      digitalWrite(IN4, HIGH);
+      break;
+      }
+
+    case 2: //realizar o passo 2
+    {
+      //Passo 2 - A1 = 0, A2 = 0, B1 = 1, B2 = 1
+      digitalWrite(IN1, LOW);
+      digitalWrite(IN2, HIGH);
+      digitalWrite(IN3, LOW);
+      digitalWrite(IN4, HIGH);
+      break;
+    }
+
+    case 3: //realizar o passo 3
+    {
+      //Passo 3 - A1 = 0, A2 = 1, B1 = 1, B2 = 0
+      digitalWrite(IN1, LOW);
+      digitalWrite(IN2, HIGH);
+      digitalWrite(IN3, HIGH);
+      digitalWrite(IN4, LOW);
+      break;
+    }
+
+    case 4: //realizar o passo 4
+    {
+      //Passo 4 - A1 = 1, A2 = 1, B1 = 0, B2 = 0
+      digitalWrite(IN1, HIGH);
+      digitalWrite(IN2, LOW);
+      digitalWrite(IN3, HIGH);
+      digitalWrite(IN4, LOW);
+      break;
+    }
+   }
+    tempopassado = tempoatual;
+     j = j+1;
+     if(j == 5)
+     {
+      j = 1;
+     }
+  }
+}
+
+//Função para aumentar a velocidade de rotação
+void aumentarVelocidade()
+{
+  if(tempo >= 100) //tempo mínimo de rotação
+  {
+    tempo = tempo - 1; //diminui o tempo em um unidade, aumenta a velocidade
+  }
+}
+
+//Função para diminuir a velocidade de rotação
+void diminuirVelocidade()
+{
+  if(tempo <= 2000) //tempo máximo de rotação 
+  {
+   tempo = tempo + 1; //aumenta o tempo de rotação, diminui a velocidade
+  }
+}
+
+void desliga()
+{
+  //Desabilita os enables do módulo L298  
+  digitalWrite(ENA, LOW);
+  digitalWrite(ENB, LOW);
+}
+
+void setup() {
+
+  Serial.begin(9600);//velocidade para comunicação serial
+  //Declaração das portas do módulo como OUTPUT
+  pinMode (IN1, OUTPUT);
+  pinMode (IN2, OUTPUT);
+  pinMode (IN3, OUTPUT);
+  pinMode (IN4, OUTPUT);
+  pinMode (ENA, OUTPUT);
+  pinMode (ENB, OUTPUT);
+  //Declaraçã das chaves como INPUT_PULLUP
+  pinMode (chaveLD, INPUT_PULLUP);
+  pinMode(chaveH_AH, INPUT_PULLUP);
+  pinMode(chaveVEL_POS, INPUT_PULLUP);
+  pinMode(chaveVEL_NEG, INPUT_PULLUP);
+  
+  //A função attachInterrupt é usada para realizar comandos automaticamente
+  //Caso o pino declarado esteja em nível baixo, a função desliga é chamada
+  attachInterrupt(digitalPinToInterrupt(chaveLD),desliga, LOW); 
+}
+
+void loop() {
+
+  //Manda nível alto para os dois enables do L298
+  //Os enables servem para habilitar o funcionamento do motor
+  //Ponte H só "funciona" enquanto enable estiver em 5v
+  //Entretanto o circuito todo funciona com 3,3V do arduino Due
+  //Isso porque 3,3V está acima da tensão mínima para se determinar nível alto
+  digitalWrite(ENA, HIGH);
+  digitalWrite(ENB, HIGH);
+
+  //Vermelha: A1 - OUT1
+  //Verde: B1 - OUT2
+  //Amarelo: A2 - OUT3
+  //Preto: B2 - OUT4
+
+  //Chave aberta = nível alto
+  //Chave fechada = nível baixo
+  //Verificar se deve aumentar e/ou diminuir a velocidade
+  if (!digitalRead(chaveVEL_POS)) //se a chave VEL+ estiver fechada
+  {
+    aumentarVelocidade(); //aumenta a velocidade de giro
+  }
+  if(!digitalRead(chaveVEL_NEG)) //se a chave VEL- estiver fechada
+  {
+    diminuirVelocidade(); //diminui a velocidade de giro
+  }
+
+  //Verificar o sentido do giro
+  if(!digitalRead(chaveH_AH)) //se a chave H_AH estiver fechada
+  {
+    //girar no sentido horário
+    horario(tempo);
+  }
+  else //se a chave H_AH estiver aberta
+  {
+    //girar no sentido antihorário
+    antihorario(tempo);
+  }
+}
