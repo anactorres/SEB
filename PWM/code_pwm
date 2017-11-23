@@ -1,0 +1,38 @@
+//Define os pinos para o potenciômetro, led/motor e chave
+#define pinLedMotor 6
+#define pinPotenciometro A0
+#define pinChave 13
+//Declara as variáveis que serão utilizadas no código
+int valor;
+int RC;
+int porcentagem;
+float tensao;
+String string1, string2, string3, frase;
+void setup() {
+  Serial.begin(9600); //define a velocidade para comunicação serial
+  pinMode(pinLedMotor, OUTPUT); //configura essa porta como saída
+  pinMode(pinChave, INPUT_PULLUP); //permite acesso ao resistor de pull-up
+ //Partes da frase que será apresentada
+  string1 = "Tensão em A0 = ";
+  string2 = " volts   Sinal PWM = ";
+  string3 = " %";
+}
+ 
+void loop() {
+ valor = analogRead(pinPotenciometro); //realiza a leitura da entrada analógica
+ RC = map(valor, 0,1023,0,255); //alterando para a escala de razão cíclica
+ porcentagem = map(RC,0,255,0,100); //porcentagem de razão cíclica
+ tensao = map(valor,0,1023,0,330); //alterando a escala para 0 a 330
+ tensao = tensao/100.00; //tensão na porta analógica
+ frase = string1 + tensao + string2 + porcentagem + string3; //concatenando as strings
+ Serial.println(frase); //apresenta a frase no monitor serial
+ 
+if(!digitalRead(pinChave)) //se a chave estiver fechada
+ {
+  analogWrite(pinLedMotor,RC); //envia o sinal para a porta com o RC especificado
+ }
+ else //caso a chave esteja aberta
+ {
+  analogWrite(pinLedMotor,0); //apaga o motor e o Led
+ }
+}
